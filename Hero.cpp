@@ -1,4 +1,3 @@
-
 #include "Hero.h"
 #include "DataCenter.h"
 
@@ -10,6 +9,8 @@ void Hero::Init(){
     imgCount[HeroState::RIGHT] = 2;
     imgCount[HeroState::FRONT] = 2;
     imgCount[HeroState::BACK] = 2;
+
+    CameraPos=DC->get_map().get_CameraPos();
 
     char buffer[50];
     for(int i = 0; i < 4; i++)
@@ -27,29 +28,24 @@ void Hero::Init(){
         }
     }
     x = 100;
-    y = 1;
-    floor = DC->get_map().CurentFloorHeight(x,y/20);
+    y = 100;
 }
-void Hero::Update(){
-    bool walled = false;
 
+void Hero::Update(){
     counter = (counter + 1) % draw_frequency;
     if(counter == 0)
         sprite_pos = (sprite_pos + 1) % imgCount[direction];
 
-
-
-    if(y<floor-60){
+    Distance *distance= DC->get_map().get_Distance(x,y);
+    cout << speed << ' ' << v0 << ' ' << x << ' '<< y << ' '<< distance->right <<' '<< distance->left << ' ' << distance->up << ' ' << distance->down << endl ;
+    
+    if(0 < distance->down-unit*2){
         v0+=gravity/15;
-    }else if(y>floor-60 && x+20 > DC->get_map().CurentWall(x/20,y)){
-        walled =true;
-        v0=0;
-    }else{
-        y=floor-60;
-        v0=0;
-    }
+    }else if(v0>0){v0=0;}
+
+
     if( key_state[ALLEGRO_KEY_SPACE] ){
-        if(y==floor-60){
+        if(distance->down==2*unit){
             v0 -= gravity;    
         }
     }
@@ -62,35 +58,67 @@ void Hero::Update(){
     }else if( key_state[ALLEGRO_KEY_S] ){
         v0 += gravity/5;
         direction = HeroState::FRONT;
-    }if( key_state[ALLEGRO_KEY_A] ){
+    }
+    if( key_state[ALLEGRO_KEY_A] ){
         if(speed >= -1*MaxSpeed){
             speed -= MaxSpeed/5;
         }
-        x += speed;
-        floor = DC->get_map().CurentFloorHeight(x,y/20);
+        if(!distance->left)speed =0;
         direction = HeroState::LEFT;
-    }else if( key_state[ALLEGRO_KEY_D] ){
-        if(speed <= MaxSpeed){
+    }else{
+        if(speed<0){
             speed += MaxSpeed/5;
         }
-        x += speed;
-    
-        floor = DC->get_map().CurentFloorHeight(x,y/20);
-        direction = HeroState::RIGHT;
     }
-    cout << DC->get_map().CurentWall(x/20,y) << ' ' << x << ' ' << y << endl;
+    if( key_state[ALLEGRO_KEY_D] ){
+        if(speed <= MaxSpeed){
+            speed += MaxSpeed/5;
+        } 
+        direction = HeroState::RIGHT;
+    }else{
+        if(speed>0){
+            speed -= MaxSpeed/5;
+        }
+    }
 
-    if(walled&&speed > 0){
-        x-=speed;
+
+    if(speed > distance->right-unit && speed >0){
+        x+=distance->right-unit;
         speed =0;
     }
-    y+=v0;
+    else if(speed < distance->left*(-1)+unit && speed<0){
+        x+=distance->left*(-1)+unit;
+        speed =0;
+    }
+    x+=speed;
+    
+    if(v0){
+        if(v0 > distance->down-2*unit && v0 >0){
+            y+=distance->down-2*unit;
+            v0=0;
+        }
+        else if(v0 <= distance->up*(-1)){
+            y+=distance->up*(-1)+1;
+            v0=0;
+        }
+        y+=v0;
+    }
+    
+    CameraPos = DC->get_map().UpdateCameraPos(x);
+    if(y>window_height){
+        Hero::reset();
+        DC->get_map().reset();
+    }
     
 }
 
 void Hero::Draw(){
 
-    al_draw_bitmap(imgData[direction][sprite_pos], x, y, 0);
+    al_draw_scaled_bitmap(imgData[direction][sprite_pos], 0, 0,al_get_bitmap_width(imgData[direction][sprite_pos]), al_get_bitmap_height(imgData[direction][sprite_pos]),x - CameraPos,y,unit,2*unit,0);
 }
 
-
+void Hero::reset(){
+    x=100;
+    y=100;
+    return;
+}

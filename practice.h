@@ -9,6 +9,7 @@
 #include <list>        
 #include <time.h>
 #include "DataCenter.h"
+#include "global.h"
 
 #define GAME_INIT -1
 #define GAME_SETTING 0

@@ -7,11 +7,11 @@
 #define grid_width 40
 #define grid_height 40
 
-#define window_width 800
-#define window_height 600
+#define window_width 1600
+#define window_height 1200
 #define field_width 600
 #define field_height 600
-
+#define unit 60
 
 #define NumOfGrid (field_width / grid_width) * (field_height / grid_height)
 

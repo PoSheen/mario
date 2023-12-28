@@ -23,7 +23,7 @@ void game_init(){
     al_init_image_addon();
 
     event_queue = al_create_event_queue();
-    display = al_create_display(800,600);
+    display = al_create_display(window_width,window_height);
     timer = al_create_timer(1.0/FPS);
 
     //if(timer == NULL)
